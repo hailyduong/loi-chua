@@ -1,0 +1,9 @@
+{
+  "name": "Lời Chúa",
+  "short_name": "Lời Chúa",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#faf6ef",
+  "theme_color": "#8a5a2b",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lời Chúa</title>
+<meta name="description" content="Bấm nút để nhận một câu Lời Chúa chữa lành">
+<meta name="theme-color" content="#8a5a2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lời Chúa">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#faf6ef; --card:#fffdf8; --text:#3b2f25; --muted:#8c7a68; --accent:#8a5a2b; --accent-text:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1814; --card:#26211c; --text:#efe6da; --muted:#a8998a; --accent:#c8904f; --accent-text:#1c1814; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100dvh; background:var(--bg); color:var(--text);
+    font-family:-apple-system, system-ui, sans-serif; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:24px 16px calc(24px + env(safe-area-inset-bottom)); }
+  h1 { font-family:Lora, serif; font-weight:500; color:var(--accent); margin:0 0 24px; font-size:1.6rem; }
+  .card { background:var(--card); border-radius:20px; padding:32px 24px; width:100%; max-width:560px;
+    min-height:220px; display:flex; flex-direction:column; justify-content:center;
+    box-shadow:0 4px 24px rgba(0,0,0,.06); transition:opacity .35s ease; }
+  .card.fade { opacity:0; }
+  .verse { font-family:Lora, serif; font-style:italic; font-size:1.35rem; line-height:1.6; margin:0; }
+  .ref { margin-top:16px; text-align:right; color:var(--accent); font-weight:600; }
+  .hint { color:var(--muted); text-align:center; font-size:1.1rem; }
+  .actions { display:flex; flex-direction:column; gap:12px; width:100%; max-width:560px; margin-top:24px; }
+  button { font:inherit; border:0; border-radius:14px; padding:18px; font-size:1.2rem; font-weight:600; cursor:pointer; }
+  #get { background:var(--accent); color:var(--accent-text); }
+  #get:active { transform:scale(.98); }
+  #copy { background:transparent; color:var(--muted); font-size:1rem; padding:10px; }
+  #copy[hidden] { display:none; }
+</style>
+</head>
+<body>
+<h1>Lời Chúa</h1>
+<div class="card" id="card"><p class="hint">Hãy tĩnh lặng một chút, rồi bấm nút bên dưới 🙏</p></div>
+<div class="actions">
+  <button id="get">Lấy lời Chúa</button>
+  <button id="copy" hidden>Sao chép để gửi</button>
+</div>
+<script>
+const VERSES = [
+  ["Ta sẽ chữa lành cho ngươi, và làm sạch các thương tích ngươi, Đức Giê-hô-va phán.", "Giê-rê-mi 30:17"],
+  ["Nhưng người đã vì tội lỗi chúng ta mà bị vết, vì sự gian ác chúng ta mà bị thương. Bởi sự sửa phạt người chịu chúng ta được bình an, bởi lằn roi người chúng ta được lành bịnh.", "Ê-sai 53:5"],
+  ["Ngài chữa lành người có lòng đau thương, và bó vít của họ.", "Thi Thiên 147:3"],
+  ["Vì ta là Đức Giê-hô-va, Đấng chữa bịnh cho ngươi.", "Xuất Ê-díp-tô Ký 15:26"],
+  ["Hỡi những kẻ mệt mỏi và gánh nặng, hãy đến cùng ta, ta sẽ cho các ngươi được yên nghỉ.", "Ma-thi-ơ 11:28"],
+  ["Chớ lo phiền chi hết, nhưng trong mọi sự hãy dùng lời cầu nguyện, nài xin, và sự tạ ơn mà trình các sự cầu xin của mình cho Đức Chúa Trời. Sự bình an của Đức Chúa Trời vượt quá mọi sự hiểu biết, sẽ giữ gìn lòng và ý tưởng anh em trong Đức Chúa Jêsus Christ.", "Phi-líp 4:6-7"],
+  ["Hỡi kẻ rất yêu dấu, tôi cầu nguyện cho anh được thạnh vượng trong mọi sự, và được khỏe mạnh phần xác anh cũng như đã được thạnh vượng về phần linh hồn anh vậy.", "3 Giăng 1:2"],
+  ["Hỡi linh hồn ta, hãy ngợi khen Đức Giê-hô-va, chớ quên các ân huệ của Ngài. Ấy là Ngài tha thứ các tội ác ngươi, chữa lành mọi bịnh tật ngươi.", "Thi Thiên 103:2-3"],
+  ["Hỡi Đức Giê-hô-va, xin chữa tôi thì tôi sẽ được lành; xin cứu tôi thì tôi sẽ được rỗi.", "Giê-rê-mi 17:14"],
+  ["Ngài ban sức mạnh cho kẻ nhọc nhằn, thêm lực lượng cho kẻ chẳng có sức.", "Ê-sai 40:29"],
+  ["Nhưng ai trông đợi Đức Giê-hô-va thì chắc được sức mới, cất cánh bay cao như chim ưng; chạy mà không mệt nhọc, đi mà không mòn mỏi.", "Ê-sai 40:31"],
+  ["Đừng sợ, vì ta ở với ngươi; chớ kinh khiếp, vì ta là Đức Chúa Trời ngươi! Ta sẽ bổ sức cho ngươi; phải, ta sẽ giúp đỡ ngươi, lấy tay hữu công bình ta mà nâng đỡ ngươi.", "Ê-sai 41:10"],
+  ["Ta để sự bình an lại cho các ngươi; ta ban sự bình an ta cho các ngươi; ta cho các ngươi sự bình an chẳng phải như thế gian cho. Lòng các ngươi chớ bối rối và đừng sợ hãi.", "Giăng 14:27"],
+  ["Lời cầu nguyện bởi đức tin sẽ cứu kẻ bịnh, Chúa sẽ đỡ kẻ ấy dậy.", "Gia-cơ 5:15"],
+  ["Ngài gánh tội lỗi chúng ta trong thân thể Ngài trên cây gỗ, hầu cho chúng ta là kẻ đã chết về tội lỗi được sống cho sự công bình; lại nhân những lằn roi của Ngài mà anh em đã được lành bịnh.", "1 Phi-e-rơ 2:24"],
+  ["Hãy trao mọi điều lo lắng mình cho Ngài, vì Ngài hay săn sóc anh em.", "1 Phi-e-rơ 5:7"],
+  ["Đức Giê-hô-va là Đấng chăn giữ tôi: tôi sẽ chẳng thiếu thốn gì. Ngài khiến tôi an nghỉ nơi đồng cỏ xanh tươi, dẫn tôi đến mé nước bình tịnh. Ngài bổ lại linh hồn tôi.", "Thi Thiên 23:1-3"],
+  ["Dầu khi tôi đi trong trũng bóng chết, tôi sẽ chẳng sợ tai họa nào; vì Chúa ở cùng tôi.", "Thi Thiên 23:4"],
+  ["Đức Chúa Trời là nơi nương náu và sức lực của chúng tôi, Ngài sẵn giúp đỡ trong cơn gian truân.", "Thi Thiên 46:1"],
+  ["Đức Giê-hô-va ở gần những người có lòng đau thương, và cứu kẻ nào có tâm hồn thống hối.", "Thi Thiên 34:18"],
+  ["Người công bình bị nhiều tai họa, nhưng Đức Giê-hô-va cứu người khỏi hết.", "Thi Thiên 34:19"],
+  ["Hãy trao gánh nặng ngươi cho Đức Giê-hô-va, Ngài sẽ nâng đỡ ngươi.", "Thi Thiên 55:22"],
+  ["Sự khóc lóc đến trọ ban đêm, nhưng buổi sáng bèn có sự vui mừng.", "Thi Thiên 30:5"],
+  ["Thịt và lòng tôi bị tiêu hao; nhưng Đức Chúa Trời là sức lực của lòng tôi, và là phần tôi đến đời đời.", "Thi Thiên 73:26"],
+  ["Ngài ban lời mình ra chữa lành họ, và rút họ khỏi cái huyệt.", "Thi Thiên 107:20"],
+  ["Sự giúp đỡ tôi đến từ Đức Giê-hô-va, là Đấng đã dựng nên trời và đất.", "Thi Thiên 121:2"],
+  ["Hãy hết lòng tin cậy Đức Giê-hô-va, chớ nương cậy nơi sự thông sáng của con; phàm trong các việc làm của con, khá nhận biết Ngài, thì Ngài sẽ chỉ dẫn các nẻo của con.", "Châm Ngôn 3:5-6"],
+  ["Lòng vui mừng vốn một phương thuốc hay; còn trí nao sờn làm xương cốt khô héo.", "Châm Ngôn 17:22"],
+  ["Lời lành giống như tàng ong, ngon ngọt cho tâm hồn, và khỏe mạnh cho xương cốt.", "Châm Ngôn 16:24"],
+  ["Nhưng về phần các ngươi là kẻ kính sợ danh ta, thì mặt trời công bình sẽ mọc lên, trong cánh nó có sự chữa bịnh.", "Ma-la-chi 4:2"],
+  ["Vì Đức Giê-hô-va phán: Ta biết ý tưởng ta nghĩ đối cùng các ngươi, là ý tưởng bình an, không phải tai họa, để cho các ngươi được sự trông cậy trong lúc cuối cùng của mình.", "Giê-rê-mi 29:11"],
+  ["Ấy là nhờ sự nhân từ của Đức Giê-hô-va mà chúng ta chưa tuyệt. Vì những sự thương xót của Ngài chẳng dứt. Mỗi buổi sáng thì lại mới luôn.", "Ca Thương 3:22-23"],
+  ["Vả, chúng ta biết rằng mọi sự hiệp lại làm ích cho kẻ yêu mến Đức Chúa Trời, tức là cho kẻ được gọi theo ý muốn Ngài đã định.", "Rô-ma 8:28"],
+  ["Ta sẽ không lìa ngươi đâu, không bỏ ngươi đâu.", "Hê-bơ-rơ 13:5"],
+  ["Ân điển ta đủ cho ngươi rồi, vì sức mạnh của ta nên trọn vẹn trong sự yếu đuối.", "2 Cô-rinh-tô 12:9"],
+  ["Tôi làm được mọi sự nhờ Đấng ban thêm sức cho tôi.", "Phi-líp 4:13"],
+  ["Đức Chúa Jêsus đi khắp xứ Ga-li-lê, dạy dỗ trong các nhà hội, giảng Tin lành của nước Đức Chúa Trời và chữa lành mọi thứ tật bịnh trong dân.", "Ma-thi-ơ 4:23"],
+  ["Hỡi con gái ta, đức tin của ngươi đã chữa lành ngươi; hãy đi cho bình an và được lành bịnh.", "Mác 5:34"],
+  ["Đức Chúa Jêsus Christ hôm qua, ngày nay, và cho đến đời đời không hề thay đổi.", "Hê-bơ-rơ 13:8"],
+  ["Nếu dân ta, là dân gọi bằng danh ta, hạ mình xuống, cầu nguyện, tìm kiếm mặt ta, và trở lại, bỏ con đường tà, thì ta ở trên trời sẽ nghe, tha thứ tội chúng nó, và cứu xứ họ khỏi tai vạ.", "2 Sử Ký 7:14"],
+  ["Nguyện Đức Giê-hô-va ban phước cho ngươi và phù hộ ngươi! Nguyện Đức Giê-hô-va chiếu sáng mặt Ngài trên ngươi và làm ơn cho ngươi! Nguyện Đức Giê-hô-va đoái xem ngươi và ban bình an cho ngươi!", "Dân Số Ký 6:24-26"],
+  ["Người nào ở nơi kín đáo của Đấng Chí Cao, sẽ được hằng ở dưới bóng của Đấng Toàn năng.", "Thi Thiên 91:1"],
+  ["Hãy yên lặng và biết rằng ta là Đức Chúa Trời.", "Thi Thiên 46:10"],
+  ["Người nào để trí mình nương cậy nơi Ngài, thì Ngài sẽ gìn giữ người trong sự bình yên trọn vẹn, vì người nhờ cậy Ngài.", "Ê-sai 26:3"],
+  ["Ta sẽ ban cho các ngươi lòng mới, và đặt thần mới trong các ngươi.", "Ê-xê-chi-ên 36:26"]
+];
+
+const card = document.getElementById('card');
+const getBtn = document.getElementById('get');
+const copyBtn = document.getElementById('copy');
+let last = -1, current = null;
+
+getBtn.addEventListener('click', () => {
+  let i;
+  do { i = Math.floor(Math.random() * VERSES.length); } while (i === last && VERSES.length > 1);
+  last = i;
+  current = VERSES[i];
+  card.classList.add('fade');
+  setTimeout(() => {
+    card.innerHTML = '';
+    const p = document.createElement('p'); p.className = 'verse'; p.textContent = '“' + current[0] + '”';
+    const r = document.createElement('div'); r.className = 'ref'; r.textContent = current[1];
+    card.append(p, r);
+    card.classList.remove('fade');
+    copyBtn.hidden = false;
+    copyBtn.textContent = 'Sao chép để gửi';
+  }, 350);
+});
+
+copyBtn.addEventListener('click', async () => {
+  if (!current) return;
+  const text = '“' + current[0] + '” (' + current[1] + ')';
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = 'Đã sao chép ✓';
+  } catch (e) {}
+});
+</script>
+</body>
+</html>
