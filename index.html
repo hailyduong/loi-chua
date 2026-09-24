@@ -24,9 +24,6 @@
   header { width:100%; max-width:560px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
   h1 { font-family:Lora, serif; font-weight:500; color:var(--accent); margin:0; font-size:1.6rem; }
   .icon-btn { background:none; border:0; font-size:1rem; color:var(--muted); padding:8px; cursor:pointer; }
-  .topics { width:100%; max-width:560px; display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; scrollbar-width:none; }
-  .topics button { flex:none; border:0; border-radius:999px; padding:8px 14px; background:var(--chip); color:var(--text); font:inherit; font-size:.95rem; cursor:pointer; }
-  .topics button.on { background:var(--accent); color:var(--accent-text); }
   .card { position:relative; background:var(--card); border-radius:20px; padding:28px 24px 24px; width:100%; max-width:560px;
     min-height:240px; display:flex; flex-direction:column; justify-content:center;
     box-shadow:0 4px 24px rgba(0,0,0,.06); transition:opacity .35s ease; }
@@ -34,7 +31,6 @@
   .label { font-size:.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; }
   .verse { font-family:Lora, serif; font-style:italic; font-size:1.3rem; line-height:1.6; margin:0; }
   .ref { margin-top:14px; text-align:right; color:var(--accent); font-weight:600; }
-  .prayer { margin-top:18px; padding-top:14px; border-top:1px solid var(--chip); color:var(--muted); font-size:1rem; line-height:1.5; }
   .fav { position:absolute; top:12px; right:12px; font-size:1.5rem; color:var(--accent); }
   .actions { display:flex; flex-direction:column; gap:10px; width:100%; max-width:560px; margin-top:20px; }
   .row { display:flex; gap:10px; }
@@ -58,7 +54,6 @@
 </header>
 
 <main id="home">
-  <nav class="topics" id="topics"></nav>
   <div class="card" id="card"></div>
   <div class="actions">
     <button id="get">Lấy lời Chúa</button>
@@ -178,50 +173,14 @@ const VERSES = [
   ["Núi có dời có đổi, đồi có lở có lay, tình thương của Ta đối với ngươi vẫn không hề thay đổi.", "I-sai-a 54:10"]
 ];
 
-const TOPICS = [
-  { id:'all', name:'Tất cả' },
-  { id:'heal', name:'Chữa lành', re:/chữa|lành|bệnh|thương tích|vết thương|tật|sạch/i },
-  { id:'peace', name:'Bình an', re:/bình an|nghỉ|yên|ẩn náu|nương|che|gìn giữ/i },
-  { id:'hope', name:'Hy vọng', re:/hy vọng|trông|cậy|mới|tương lai|sức|sống/i },
-  { id:'fear', name:'Khi lo âu', re:/sợ|lo|gian|khốn|buồn|nước mắt|lệ|tan vỡ|mệt/i },
-  { id:'love', name:'Tình thương', re:/yêu|thương|quý|mẹ|quên/i },
-];
-
-const PRAYERS = {
-  heal: ['Lạy Chúa Giê-su, xin chạm đến con và chữa lành những gì đang đau yếu trong con. Amen.',
-         'Lạy Chúa, chỉ cần Chúa phán một lời là con sẽ được lành. Amen.'],
-  peace:['Lạy Chúa, xin cho lòng con được bình an trong vòng tay Chúa. Amen.',
-         'Lạy Chúa, con xin phó thác mọi sự trong tay Chúa. Amen.'],
-  hope: ['Lạy Chúa, xin thắp lại niềm hy vọng trong con hôm nay. Amen.',
-         'Lạy Chúa, con tin Chúa đang làm mọi sự nên mới trong đời con. Amen.'],
-  fear: ['Lạy Chúa, con trao cho Chúa mọi lo âu của con. Xin ở lại với con. Amen.',
-         'Lạy Chúa Giê-su, con tín thác vào Chúa. Amen.'],
-  love: ['Lạy Chúa, cảm tạ Chúa vì con được Chúa yêu thương. Amen.',
-         'Lạy Chúa, xin cho con biết yêu thương như Chúa yêu thương con. Amen.'],
-};
-
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
-const topicsOf = v => TOPICS.filter(t => t.re && t.re.test(v[0])).map(t => t.id);
 const $ = id => document.getElementById(id);
-let topic = store.get('topic', 'all');
 let favs = store.get('favs', []);
 let current = null, last = -1, isDaily = false;
-
-function pool() {
-  if (topic === 'all') return VERSES.map((_, i) => i);
-  const p = VERSES.map((v, i) => i).filter(i => topicsOf(VERSES[i]).includes(topic));
-  return p.length ? p : VERSES.map((_, i) => i);
-}
-
-function prayerFor(i) {
-  const t = topic !== 'all' ? topic : (topicsOf(VERSES[i])[0] || 'hope');
-  const list = PRAYERS[t];
-  return list[i % list.length];
-}
 
 function todayIndex() {
   const d = new Date(), s = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -242,8 +201,7 @@ function render(i, label) {
     const l = document.createElement('div'); l.className = 'label'; l.textContent = label || ' ';
     const p = document.createElement('p'); p.className = 'verse'; p.textContent = '“' + v[0] + '”';
     const r = document.createElement('div'); r.className = 'ref'; r.textContent = v[1];
-    const pr = document.createElement('div'); pr.className = 'prayer'; pr.textContent = '🙏 ' + prayerFor(i);
-    card.append(fav, l, p, r, pr);
+    card.append(fav, l, p, r);
     card.classList.remove('fade');
   }, card.childElementCount ? 350 : 0);
 }
@@ -254,20 +212,9 @@ function toggleFav(ref, btn) {
   if (btn) btn.textContent = favs.includes(ref) ? '♥' : '♡';
 }
 
-function renderTopics() {
-  const nav = $('topics'); nav.innerHTML = '';
-  for (const t of TOPICS) {
-    const b = document.createElement('button');
-    b.textContent = t.name; b.className = t.id === topic ? 'on' : '';
-    b.onclick = () => { topic = t.id; store.set('topic', topic); renderTopics(); next(); };
-    nav.append(b);
-  }
-}
-
 function next() {
-  const p = pool();
   let i;
-  do { i = p[Math.floor(Math.random() * p.length)]; } while (i === last && p.length > 1);
+  do { i = Math.floor(Math.random() * VERSES.length); } while (i === last);
   last = i;
   render(i);
 }
@@ -353,7 +300,6 @@ function renderFavs() {
   }
 }
 
-renderTopics();
 render(todayIndex(), 'Lời Chúa hôm nay');
 last = todayIndex();
 
