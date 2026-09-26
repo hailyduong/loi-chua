@@ -1,0 +1,9 @@
+{
+  "hosting": {
+    "site": "loichuamoingay",
+    "public": "public",
+    "redirects": [
+      { "source": "**", "destination": "https://nhanloichua.web.app", "type": 301 }
+    ]
+  }
+}
