@@ -178,6 +178,26 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
+const MIXPANEL_TOKEN = '1c351f7868ec8ed80eed639cde3195e1';
+const queued = [];
+function track(event, props) {
+  if (window.mixpanel && mixpanel.__loaded) mixpanel.track(event, props);
+  else queued.push([event, props]);
+}
+(function loadMixpanel() {
+  const s = document.createElement('script');
+  s.src = 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
+  s.async = true;
+  s.onload = () => {
+    mixpanel.init(MIXPANEL_TOKEN, {
+      track_pageview: false,
+      persistence: 'localStorage',
+      loaded: () => queued.splice(0).forEach(([e, p]) => mixpanel.track(e, p)),
+    });
+  };
+  document.head.append(s);
+})();
+
 const $ = id => document.getElementById(id);
 let favs = store.get('favs', []);
 let current = null, last = -1;
@@ -205,8 +225,10 @@ function render(i) {
 }
 
 function toggleFav(ref, btn) {
-  favs = favs.includes(ref) ? favs.filter(r => r !== ref) : [ref, ...favs];
+  const saved = !favs.includes(ref);
+  favs = saved ? [ref, ...favs] : favs.filter(r => r !== ref);
   store.set('favs', favs);
+  track('verse_favorited', { verse_ref: ref, saved });
   if (btn) btn.textContent = favs.includes(ref) ? '♥' : '♡';
 }
 
@@ -215,6 +237,7 @@ function next() {
   do { i = Math.floor(Math.random() * VERSES.length); } while (i === last);
   last = i;
   render(i);
+  track('verse_requested', { verse_ref: VERSES[i][1] });
 }
 
 function verseText(i) { return '“' + VERSES[i][0] + '” (' + VERSES[i][1] + ')'; }
@@ -255,6 +278,7 @@ $('get').onclick = next;
 
 $('copy').onclick = async () => {
   if (current == null) return;
+  track('verse_shared', { verse_ref: VERSES[current][1], method: 'copy' });
   try { await navigator.clipboard.writeText(verseText(current)); $('copy').textContent = 'Đã sao chép ✓'; }
   catch { prompt('Sao chép câu này:', verseText(current)); }
   setTimeout(() => $('copy').textContent = 'Sao chép', 1500);
@@ -263,6 +287,7 @@ $('copy').onclick = async () => {
 $('share').onclick = async () => {
   if (current == null) return;
   const btn = $('share'); btn.textContent = 'Đang tạo hình…';
+  track('verse_shared', { verse_ref: VERSES[current][1], method: 'image' });
   try {
     const blob = await makeImage(current);
     const file = new File([blob], 'loi-chua.png', { type: 'image/png' });
@@ -299,6 +324,10 @@ function renderFavs() {
 }
 
 showIntro();
+track('app_opened', {
+  standalone: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
+  site: location.host,
+});
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>

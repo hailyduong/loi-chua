@@ -1,4 +1,4 @@
-const CACHE = 'loi-chua-v4';
+const CACHE = 'loi-chua-v5';
 const ASSETS = ['./', 'index.html', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
@@ -12,7 +12,7 @@ self.addEventListener('activate', e => {
 
 // Network-first so updated verses show up as soon as the phone is online.
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
     fetch(e.request).then(res => {
       const copy = res.clone();
