@@ -6,6 +6,7 @@
 <title>Nhận Lời Chúa</title>
 <meta name="description" content="Mỗi ngày một Lời Chúa chữa lành và hy vọng">
 <meta name="theme-color" content="#8a5a2b">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Nhận Lời Chúa">
 <link rel="manifest" href="manifest.json">
@@ -185,16 +186,19 @@ function track(event, props) {
   else queued.push([event, props]);
 }
 (function loadMixpanel() {
+  // The CDN build expects the official snippet's stub: it replays mixpanel._i once loaded.
+  const stub = window.mixpanel = [];
+  stub.__SV = 1.2;
+  stub._i = [];
+  stub.init = (token, config, name) => stub._i.push([token, config, name || 'mixpanel']);
+  stub.init(MIXPANEL_TOKEN, {
+    track_pageview: false,
+    persistence: 'localStorage',
+    loaded: mp => queued.splice(0).forEach(([e, p]) => mp.track(e, p)),
+  });
   const s = document.createElement('script');
   s.src = 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
   s.async = true;
-  s.onload = () => {
-    mixpanel.init(MIXPANEL_TOKEN, {
-      track_pageview: false,
-      persistence: 'localStorage',
-      loaded: () => queued.splice(0).forEach(([e, p]) => mixpanel.track(e, p)),
-    });
-  };
   document.head.append(s);
 })();
 
