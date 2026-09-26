@@ -1,4 +1,4 @@
-const CACHE = 'loi-chua-v5';
+const CACHE = 'loi-chua-v6';
 const ASSETS = ['./', 'index.html', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
